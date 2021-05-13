@@ -1,4 +1,5 @@
 #!
+from bottle import run,post,request
 from sys import path
 from numpy import integer
 from skimage.metrics import structural_similarity as ssim
@@ -7,6 +8,8 @@ import os
 import shutil
 import argparse
 from pyfiglet import Figlet
+import hashlib
+import numpy as np
 
 defaultImagesPath = 'images'
 defaultOutputPath = 'output'
@@ -14,6 +17,11 @@ defaultSimilarityGrade = 0.95
 
 def isImageInsideImages(image,imagesArray):
     return any((image == x).all() for x in imagesArray)
+
+def hashBuffer(aBuffer):
+    hasher = hashlib.sha1()
+    hasher.update(aBuffer)
+    return  hasher.hexdigest()
 
 def saveBatchOfImages(batchsOfImages, path):
     try:
@@ -92,7 +100,10 @@ def processArguments():
     parser.add_argument('--similarityGrade', '-s', type=float, help="Value between 0 and 1. Default: 0.95")
     parser.add_argument('--imagesDirectory', '-i', help="Path where images are found. Default: 'images' ")
     parser.add_argument('--outputDirectory', '-o', help="Path where processed images are. Default: 'output'")
+    parser.add_argument('--runServer', '-r', help="Run server with API.", action='store_true')
     args = parser.parse_args()
+
+    runServerOption = args.runServer
 
     if(args.similarityGrade is not None):
         validateSimilarityGrade(args.similarityGrade)
@@ -111,22 +122,95 @@ def processArguments():
     else:
         outputDirectory = defaultOutputPath
 
-    return (similarityGrade,imagesPath,outputDirectory)
+    return (similarityGrade,imagesPath,outputDirectory,runServerOption)
+
+def filesBuffersFromRequest(request):
+
+    filesAsFileUpload = list(request.files.values())
+    files = []
+
+    for fileUpload in filesAsFileUpload:
+        files.append(fileUpload.file.file.read())
+
+    return files
+
+def buffersToImages(buffers):
+    images = []
+
+    for buffer in buffers:
+        images.append(bufferToImage(buffer))
+
+    return images
+
+def bufferToImage(buffer):
+    file_bytes = np.asarray(bytearray(buffer), dtype=np.uint8)
+    return cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+
+def imagesHashesDictionaryByFile(imagesBuffers):
+    hashDictionary = {}
+
+    for imageBuffer in imagesBuffers:
+        hashDictionary[bufferToImage(imageBuffer).tobytes()] = hashBuffer(imageBuffer)
+    
+    return hashDictionary
+
+def batchesHashList(imageHashesDictionary,batches):
+
+    hashList = []
+
+    for batch in batches:
+        hashList.append(batchHashesList(imageHashesDictionary, batch))
+
+    return hashList
+
+def batchHashesList(imageHashesDictionary,batches):
+    hashList = []
+
+    for image in batches:
+        hashList.append(imageHashesDictionary[image.tobytes()])
+
+    return hashList
+
+@post('/api/imageSimilarityByHash')
+def imageSimilarityByHash():
+    if( 'similarity_grade' in request.params.keys() ):
+        similarityGrade = float(request.params['similarity_grade'])
+
+        if not isValidSimilarityGrade(similarityGrade):
+            return "ERROR: Similarity grade should be between 0 and 1."
+    
+    else:
+        similarityGrade = 0.95
+
+    similarityGrade = 0.95
+    imagesBuffers = filesBuffersFromRequest(request)
+    images = buffersToImages(imagesBuffers)
+    batches = similarImagesDividedInBatchs(images,float(similarityGrade))
+    imagesHashesDictionary = imagesHashesDictionaryByFile(imagesBuffers)
+    batchesHashListResult = batchesHashList(imagesHashesDictionary,batches)
+
+    return {"batches":batchesHashListResult}
+
+def runServer():
+    run(host='localhost', port=8080, debug=False)
 
 def main():
     
     printBanner()
     
-    (similarityGrade, imagesPath, outputPath) = processArguments()
-    print("Loading images from '{}'...".format(imagesPath))
-    images = imagesInPath(imagesPath)
-    print("Dividing images in batches according to similarity ({})...".format(similarityGrade))
-    batchs = similarImagesDividedInBatchs(images,similarityGrade)
-    print("Saving images in '{}'...".format(outputPath))
-    saveBatchOfImages(batchs,outputPath)
-    print("Done.")
+    (similarityGrade, imagesPath, outputPath,runServerOption) = processArguments()
 
-    return
+    if runServerOption == True :
+        runServer()
+    else:
+        print("Loading images from '{}'...".format(imagesPath))
+        images = imagesInPath(imagesPath)
+        print("Dividing images in batches according to similarity ({})...".format(similarityGrade))
+        batchs = similarImagesDividedInBatchs(images,similarityGrade)
+        print("Saving images in '{}'...".format(outputPath))
+        saveBatchOfImages(batchs,outputPath)
+    
+    print("Done.")
 
 if __name__ == "__main__":
     main()
