@@ -64,6 +64,7 @@ If you print hashes you can obtain:
 If you don't pass 'similarity_grade', it will be 0.95.
 
 To run the server, just type:
+
     python .\imageSimilarity.py --runServer
 
 # Get Help
