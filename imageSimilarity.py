@@ -23,26 +23,26 @@ def hashBuffer(aBuffer):
     hasher.update(aBuffer)
     return  hasher.hexdigest()
 
-def saveBatchOfImages(batchsOfImages, path):
+def saveImagesInLists(listsOfImages, path):
     try:
         os.mkdir(path)
     except FileExistsError as error:
         shutil.rmtree(path)
         os.mkdir(path)
     
-    for numberOfBatch in range(0,len(batchsOfImages)):
-        os.mkdir(path+'/'+str(numberOfBatch))
-        for numberOfImage in range(0,len(batchsOfImages[numberOfBatch])):
-            image = batchsOfImages[numberOfBatch][numberOfImage]
-            cv2.imwrite(path+'/'+str(numberOfBatch)+'/'+str(numberOfImage)+'.jpeg',image)
+    for numberOfList in range(0,len(listsOfImages)):
+        os.mkdir(path+'/'+str(numberOfList))
+        for numberOfImage in range(0,len(listsOfImages[numberOfList])):
+            image = listsOfImages[numberOfList][numberOfImage]
+            cv2.imwrite(path+'/'+str(numberOfList)+'/'+str(numberOfImage)+'.jpeg',image)
 
 def printBanner():
     customFiglet = Figlet(font='doom')
     asciiBanner = customFiglet.renderText('Image Similarity')
     print(asciiBanner)
 
-def similarImagesDividedInBatchs(images, minimumSimilarity):
-    batchs = []
+def similarImagesDividedInLists(images, minimumSimilarity):
+    lists = []
     imagesCopy = images.copy()
     imagesAlreadyDivided = []
 
@@ -53,8 +53,8 @@ def similarImagesDividedInBatchs(images, minimumSimilarity):
             for i in similarImages:
                 imagesAlreadyDivided.append(i)
 
-            batchs.append(similarImages)
-    return batchs
+            lists.append(similarImages)
+    return lists
 
 def measureSimilarityGradeBetweenImages(imageOne,imageTwo):
     imageOne = cv2.cvtColor(imageOne, cv2.COLOR_BGR2GRAY)
@@ -154,19 +154,19 @@ def imagesHashesDictionaryByFile(imagesBuffers):
     
     return hashDictionary
 
-def batchesHashList(imageHashesDictionary,batches):
+def hashListsOfImages(imageHashesDictionary,lists):
 
     hashList = []
 
-    for batch in batches:
-        hashList.append(batchHashesList(imageHashesDictionary, batch))
+    for list in lists:
+        hashList.append(hashListOfImages(imageHashesDictionary, list))
 
     return hashList
 
-def batchHashesList(imageHashesDictionary,batches):
+def hashListOfImages(imageHashesDictionary,list):
     hashList = []
 
-    for image in batches:
+    for image in list:
         hashList.append(imageHashesDictionary[image.tobytes()])
 
     return hashList
@@ -185,11 +185,11 @@ def imageSimilarityByHash():
     similarityGrade = 0.95
     imagesBuffers = filesBuffersFromRequest(request)
     images = buffersToImages(imagesBuffers)
-    batches = similarImagesDividedInBatchs(images,float(similarityGrade))
+    lists = similarImagesDividedInLists(images,float(similarityGrade))
     imagesHashesDictionary = imagesHashesDictionaryByFile(imagesBuffers)
-    batchesHashListResult = batchesHashList(imagesHashesDictionary,batches)
+    listsHashListResult = hashListsOfImages(imagesHashesDictionary,lists)
 
-    return {"batches":batchesHashListResult}
+    return {"lists":listsHashListResult}
 
 def runServer():
     run(host='localhost', port=8080, debug=False)
@@ -205,10 +205,10 @@ def main():
     else:
         print("Loading images from '{}'...".format(imagesPath))
         images = imagesInPath(imagesPath)
-        print("Dividing images in batches according to similarity ({})...".format(similarityGrade))
-        batchs = similarImagesDividedInBatchs(images,similarityGrade)
+        print("Dividing images in lists according to similarity ({})...".format(similarityGrade))
+        lists = similarImagesDividedInLists(images,similarityGrade)
         print("Saving images in '{}'...".format(outputPath))
-        saveBatchOfImages(batchs,outputPath)
+        saveImagesInLists(lists,outputPath)
     
     print("Done.")
 

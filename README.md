@@ -47,15 +47,19 @@ A complete script running is:
 # APIs
 The script can create a server to hold an API that receives images and then returns a list of lists with similar images hashes. A use case could be:
 
+    import requests
+    import json
+
     filesDictionary = {
-    	'01.jpeg': open('testImages/01.jpeg', 'rb'),
-    	'02.jpeg': open('testImages/02.jpeg', 'rb'),
-    	'05.jpeg': open('testImages/05.jpeg', 'rb'),
+        '01.jpeg': open('images/01.jpeg', 'rb'),
+        '02.jpeg': open('images/02.jpeg', 'rb'),
+        '05.jpeg': open('images/05.jpeg', 'rb'),
     }
-    
+
     response = requests.post("http://localhost:8080/api/imageSimilarityByHash",files=filesDictionary,params={'similarity_grade':0.75})
-    
-    hashes = json.loads(response.text)['batches']
+
+    hashes = json.loads(response.text)['lists']
+
 
 If you print hashes you can obtain:
 

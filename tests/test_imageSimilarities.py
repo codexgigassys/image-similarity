@@ -62,16 +62,16 @@ def test_imageTwoDifferentSimilarImagesHasTheSameSimilarImages():
     assert quantityOfSimilarImagesOfImageOne == quantityOfSimilarImagesOfImageTwo
 
 def test_fiveBatchsFromTestImagesWithHighSimilarity():
-    batchs = imageSimilarity.similarImagesDividedInBatchs(testImages,0.95)
+    batchs = imageSimilarity.similarImagesDividedInLists(testImages,0.95)
     quantityOfBatchs = len(batchs)
     assert quantityOfBatchs == 5
 
 def test_twentyOneBatchsFromTestImagesWithSimilarityOne():
-    batchs = imageSimilarity.similarImagesDividedInBatchs(testImages,1)
+    batchs = imageSimilarity.similarImagesDividedInLists(testImages,1)
     quantityOfBatchs = len(batchs)
     assert quantityOfBatchs == 21
 
 def test_twentyOneBatchsFromTestImagesWithSimilarityOne():
-    batchs = imageSimilarity.similarImagesDividedInBatchs(testImages,0)
+    batchs = imageSimilarity.similarImagesDividedInLists(testImages,0)
     quantityOfBatchs = len(batchs)
     assert quantityOfBatchs == 1

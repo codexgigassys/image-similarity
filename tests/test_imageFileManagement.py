@@ -7,8 +7,8 @@ sys.path.append('tests')
 
 def test_batchOfFilesIsSavedInSpecifiedPath():
     images = imageSimilarity.imagesInPath("testImages")
-    batchs = imageSimilarity.similarImagesDividedInBatchs(images,0.95)
-    imageSimilarity.saveBatchOfImages(batchs,'testResult')
+    batchs = imageSimilarity.similarImagesDividedInLists(images,0.95)
+    imageSimilarity.saveImagesInLists(batchs,'testResult')
     assert len(os.listdir('testResult')) == 5
 
 
