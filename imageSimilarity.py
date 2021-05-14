@@ -130,7 +130,7 @@ def filesBuffersFromRequest(request):
     files = []
 
     for fileUpload in filesAsFileUpload:
-        files.append(fileUpload.file.file.read())
+        files.append(fileUpload.file.read())
 
     return files
 
@@ -192,7 +192,7 @@ def imageSimilarityByHash():
     return {"lists":listsHashListResult}
 
 def runServer():
-    run(host='localhost', port=8080, debug=False)
+    run(host='0.0.0.0', port=8080, debug=False)
 
 def main():
     
