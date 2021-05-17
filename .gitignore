@@ -1,0 +1,10 @@
+Ignore backup files and compiled python
+*~
+*.pyc
+*.wpr
+*.wpu
+*.swp
+
+__pycache__
+output/*
+tests/testResult/*

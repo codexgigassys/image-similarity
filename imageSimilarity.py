@@ -1,4 +1,6 @@
 #!
+import monkeymagic
+import gevent
 from bottle import run,post,request
 from sys import path
 from numpy import integer
@@ -192,7 +194,7 @@ def imageSimilarityByHash():
     return {"lists":listsHashListResult}
 
 def runServer():
-    run(host='0.0.0.0', port=8080, debug=False)
+    run(host='0.0.0.0', port=9081, debug=False, server='gevent')
 
 def main():
     
