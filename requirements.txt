@@ -31,4 +31,3 @@ tifffile==2021.4.8
 toml==0.10.2
 urllib3==1.26.4
 gevent
-
