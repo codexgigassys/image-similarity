@@ -3,7 +3,6 @@ import monkeymagic
 import gevent
 from bottle import run,post,request
 from sys import path
-from numpy import integer
 from skimage.metrics import structural_similarity as ssim
 import cv2
 import os
@@ -12,13 +11,79 @@ import argparse
 from pyfiglet import Figlet
 import hashlib
 import numpy as np
+import cv2
 
 defaultImagesPath = 'images'
 defaultOutputPath = 'output'
 defaultSimilarityGrade = 0.95
 
+class Image:
+    @classmethod
+    def fromPath(cls,path):
+        return cls(path,None)
+
+    @classmethod
+    def allFromPath(cls,path):
+        arrayOfImagesNames = os.listdir(path)
+        arrayOfImages = []
+
+        for imageName in arrayOfImagesNames:
+            currentImage = cls.fromPath(path+'/'+imageName)
+            arrayOfImages.append(currentImage)
+        
+        path == arrayOfImages
+        return arrayOfImages
+
+    @classmethod
+    def fromBuffer(cls,buffer):
+        return cls(None,buffer)
+
+    @classmethod
+    def allFromBuffers(cls,buffers):
+        arrayOfImages = []
+
+        for buffer in buffers:
+            arrayOfImages.append(Image.fromBuffer(buffer))
+
+        return arrayOfImages    
+
+    def __init__(self,path=None,buffer=None):
+        if path != None:
+            self.imageAsNumpyArray = cv2.imread(path)
+            self.name = path.split("/")[-1]
+            file = open(path,'rb')
+            self.buffer = file.read()
+            file.close()
+        elif buffer != None:
+            file_bytes = np.asarray(bytearray(buffer), dtype=np.uint8)
+            self.imageAsNumpyArray = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+            self.name = ""
+            self.buffer = buffer
+
+    def similarityWith(self,anImage):
+        selfImageProccessed = cv2.cvtColor(self.imageAsNumpyArray, cv2.COLOR_BGR2GRAY)
+        anImageProccessed = cv2.cvtColor(anImage.imageAsNumpyArray, cv2.COLOR_BGR2GRAY)
+        return ssim(selfImageProccessed,anImageProccessed)
+
+    def hash(self):
+        return hash(self.imageAsNumpyArray.tobytes())
+
+    def sha1(self):
+        hasher = hashlib.sha1()
+        hasher.update(self.buffer)
+        return  hasher.hexdigest()
+
+def remove(array, arrays):
+
+    try:
+        index = [a.hash() for a in arrays].index(array.hash())
+    except ValueError as e:
+        print(f'Array not in list. Leaving input unchanged.')
+    else:
+        arrays.pop(index)
+
 def isImageInsideImages(image,imagesArray):
-    return any((image == x).all() for x in imagesArray)
+    return image.hash() in [a.hash() for a in imagesArray]
 
 def hashBuffer(aBuffer):
     hasher = hashlib.sha1()
@@ -36,7 +101,7 @@ def saveImagesInLists(listsOfImages, path):
         os.mkdir(path+'/'+str(numberOfList))
         for numberOfImage in range(0,len(listsOfImages[numberOfList])):
             image = listsOfImages[numberOfList][numberOfImage]
-            cv2.imwrite(path+'/'+str(numberOfList)+'/'+str(numberOfImage)+'.jpeg',image)
+            cv2.imwrite(path+'/'+str(numberOfList)+'/'+image.name,image.imageAsNumpyArray)
 
 def printBanner():
     customFiglet = Figlet(font='doom')
@@ -47,39 +112,25 @@ def similarImagesDividedInLists(images, minimumSimilarity):
     lists = []
     imagesCopy = images.copy()
     imagesAlreadyDivided = []
+    imageIndex = 0
 
-    for image in imagesCopy:
-        if len(imagesAlreadyDivided) == 0 or not isImageInsideImages(image,imagesAlreadyDivided):
-            similarImages = similarImagesOfImage(image,images,minimumSimilarity)
+    while(len(imagesCopy) != 0):
+        actualImage = imagesCopy[imageIndex]
+        similarImages = similarImagesOfImage(actualImage,imagesCopy,minimumSimilarity)
 
-            for i in similarImages:
-                imagesAlreadyDivided.append(i)
+        for image in similarImages:
+            remove(image,imagesCopy)
 
-            lists.append(similarImages)
+        lists.append(similarImages)
+
     return lists
-
-def measureSimilarityGradeBetweenImages(imageOne,imageTwo):
-    imageOne = cv2.cvtColor(imageOne, cv2.COLOR_BGR2GRAY)
-    imageTwo = cv2.cvtColor(imageTwo, cv2.COLOR_BGR2GRAY)
-    return ssim(imageOne,imageTwo)
 
 def similarImagesOfImage(image, arrayOfImages, minimumSimilarity):
     similarImages = []
     for anImage in arrayOfImages:
-        if measureSimilarityGradeBetweenImages(anImage,image) >= minimumSimilarity:
+        if anImage.similarityWith(image) >= minimumSimilarity:
             similarImages.append(anImage)
     return similarImages
-
-def imagesInPath(imagesPath):
-    arrayOfImagesNames = os.listdir(imagesPath)
-    arrayOfImages = []
-
-    for imageName in arrayOfImagesNames:
-        currentImage = cv2.imread(imagesPath+'/'+imageName)
-        arrayOfImages.append(currentImage)
-    
-    imagesPath == arrayOfImages
-    return arrayOfImages
 
 def isValidSimilarityGrade(aSimilarityGrade):
     return 0 <= aSimilarityGrade <= 1
@@ -140,36 +191,23 @@ def buffersToImages(buffers):
     images = []
 
     for buffer in buffers:
-        images.append(bufferToImage(buffer))
+        images.append(Image.fromBuffer(buffer))
 
     return images
 
-def bufferToImage(buffer):
-    file_bytes = np.asarray(bytearray(buffer), dtype=np.uint8)
-    return cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-
-def imagesHashesDictionaryByFile(imagesBuffers):
-    hashDictionary = {}
-
-    for imageBuffer in imagesBuffers:
-        hashDictionary[bufferToImage(imageBuffer).tobytes()] = hashBuffer(imageBuffer)
-    
-    return hashDictionary
-
-def hashListsOfImages(imageHashesDictionary,lists):
-
+def hashListsOfImages(lists):
     hashList = []
 
     for list in lists:
-        hashList.append(hashListOfImages(imageHashesDictionary, list))
+        hashList.append(hashListOfImages(list))
 
     return hashList
 
-def hashListOfImages(imageHashesDictionary,list):
+def hashListOfImages(list):
     hashList = []
 
     for image in list:
-        hashList.append(imageHashesDictionary[image.tobytes()])
+        hashList.append(image.sha1())
 
     return hashList
 
@@ -186,10 +224,9 @@ def imageSimilarityByHash():
 
     similarityGrade = 0.95
     imagesBuffers = filesBuffersFromRequest(request)
-    images = buffersToImages(imagesBuffers)
+    images = Image.allFromBuffers(imagesBuffers)
     lists = similarImagesDividedInLists(images,float(similarityGrade))
-    imagesHashesDictionary = imagesHashesDictionaryByFile(imagesBuffers)
-    listsHashListResult = hashListsOfImages(imagesHashesDictionary,lists)
+    listsHashListResult = hashListsOfImages(lists)
 
     return {"lists":listsHashListResult}
 
@@ -206,7 +243,7 @@ def main():
         runServer()
     else:
         print("Loading images from '{}'...".format(imagesPath))
-        images = imagesInPath(imagesPath)
+        images = Image.allFromPath(imagesPath)
         print("Dividing images in lists according to similarity ({})...".format(similarityGrade))
         lists = similarImagesDividedInLists(images,similarityGrade)
         print("Saving images in '{}'...".format(outputPath))

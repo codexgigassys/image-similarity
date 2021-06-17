@@ -45,7 +45,7 @@ A complete script running is:
     python .\imageSimilarity.py --similarityGrade aValidValue --imagesDirectory pathToImages --outputDirectory pathToSaveOutput 
 
 # APIs
-The script can create a server to hold an API that receives images and then returns a list of lists with similar images hashes. A use case could be:
+The script can create a server to hold an API that receives images and then returns a list of lists with similar images hashes. A use case could be (it's exampleCode.py):
 
     import requests
     import json
@@ -56,10 +56,9 @@ The script can create a server to hold an API that receives images and then retu
         '05.jpeg': open('images/05.jpeg', 'rb'),
     }
 
-    response = requests.post("http://localhost:8080/api/imageSimilarityByHash",files=filesDictionary,params={'similarity_grade':0.75})
+    response = requests.post("http://localhost:9082/api/imageSimilarityByHash",files=filesDictionary,params={'similarity_grade':0.75})
 
     hashes = json.loads(response.text)['lists']
-
 
 If you print hashes you can obtain:
 

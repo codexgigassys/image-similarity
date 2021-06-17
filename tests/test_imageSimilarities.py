@@ -3,57 +3,59 @@ import cv2
 #The following line is done to get the imageSimilarity.py that is in the previous folder.
 sys.path.append('../')
 import imageSimilarity
+from imageSimilarity import Image
 
-testImages = imageSimilarity.imagesInPath('testImages')
+testImages = Image.allFromPath('testImages')
 
 def test_twoEqualImagesHasSimilarityOne():
-    imageOne = cv2.imread('testImages/01.jpeg')
-    imageTwo = cv2.imread('testImages/01.jpeg')
 
-    result = imageSimilarity.measureSimilarityGradeBetweenImages(imageOne,imageTwo)
+    imageOne = Image.fromPath('testImages/01.jpeg')
+    imageTwo = Image.fromPath('testImages/01.jpeg')
+
+    result = imageOne.similarityWith(imageTwo)
 
     assert result == 1
 
 def test_twoNotSimilarImagesHasLowSimilarity():
-    imageOne = cv2.imread('testImages/01.jpeg')
-    imageTwo = cv2.imread('testImages/03.jpeg')
+    imageOne = Image.fromPath('testImages/01.jpeg')
+    imageTwo = Image.fromPath('testImages/03.jpeg')
 
-    result = imageSimilarity.measureSimilarityGradeBetweenImages(imageOne,imageTwo)
+    result = imageOne.similarityWith(imageTwo)
 
     assert result < 0.25
 
 def test_twoSimilarImagesHasHighSimilarity():
-    imageOne = cv2.imread('testImages/01.jpeg')
-    imageTwo = cv2.imread('testImages/02.jpeg')
+    imageOne = Image.fromPath('testImages/01.jpeg')
+    imageTwo = Image.fromPath('testImages/02.jpeg')
 
-    result = imageSimilarity.measureSimilarityGradeBetweenImages(imageOne,imageTwo)
+    result = imageOne.similarityWith(imageTwo)
 
     assert result > 0.9
 
 def test_imageHasItselfAsSimilarImage():
-    image = cv2.imread('testImages/16.jpeg')
-
+    image = Image.fromPath('testImages/16.jpeg')
     similarImages = imageSimilarity.similarImagesOfImage(image,testImages,0.95)
 
     assert imageSimilarity.isImageInsideImages(image,similarImages)
 
 def test_imageHasSomeSimilarImages():
-    image = cv2.imread('testImages/08.jpeg')
+    image = Image.fromPath('testImages/08.jpeg')
     similarImages = imageSimilarity.similarImagesOfImage(image,testImages,0.95)
     quantityOfSimilarImages = len(similarImages)
 
     assert quantityOfSimilarImages == 14
 
 def test_imageHasOnlyOneImageWithSimilarityOne():
-    image = cv2.imread('testImages/18.jpeg')
+    image = Image.fromPath('testImages/18.jpeg')
     similarImages = imageSimilarity.similarImagesOfImage(image,testImages, 1)
     quantityOfSimilarImages = len(similarImages)
 
     assert quantityOfSimilarImages == 1
 
 def test_imageTwoDifferentSimilarImagesHasTheSameSimilarImages():
-    imageOne = cv2.imread('testImages/02.jpeg')
-    imageTwo = cv2.imread('testImages/14.jpeg')
+    imageOne = Image.fromPath('testImages/02.jpeg')
+    imageTwo = Image.fromPath('testImages/14.jpeg')
+
     similarImagesOfImageOne = imageSimilarity.similarImagesOfImage(imageOne,testImages,0.95)
     similarImagesOfImageTwo = imageSimilarity.similarImagesOfImage(imageTwo,testImages,0.95)
     quantityOfSimilarImagesOfImageOne = len(similarImagesOfImageOne)
