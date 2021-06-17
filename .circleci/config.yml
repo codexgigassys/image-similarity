@@ -43,4 +43,4 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: docker exec imagesimilarity1 cd tests; docker exec imagesimilarity1 pytest .
+          command: docker exec -i imagesimilarity1 bash -c "cd /myapp/tests && python -m pytest ."
