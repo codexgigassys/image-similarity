@@ -3,7 +3,6 @@ import monkeymagic
 import gevent
 from bottle import run,post,request
 from sys import path
-from numpy import integer
 from skimage.metrics import structural_similarity as ssim
 import cv2
 import os
@@ -52,7 +51,7 @@ class Image:
         if path != None:
             self.imageAsNumpyArray = cv2.imread(path)
             self.name = path.split("/")[-1]
-            file = open('testImages/06.jpeg','rb')
+            file = open(path,'rb')
             self.buffer = file.read()
             file.close()
         elif buffer != None:
