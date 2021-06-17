@@ -65,6 +65,9 @@ class Image:
         anImageProccessed = cv2.cvtColor(anImage.imageAsNumpyArray, cv2.COLOR_BGR2GRAY)
         return ssim(selfImageProccessed,anImageProccessed)
 
+    def isSimilarWith(self,anImage,minimumSimilarity):
+        return self.similarityWith(anImage) >= minimumSimilarity
+
     def hash(self):
         return hash(self.imageAsNumpyArray.tobytes())
 
@@ -110,27 +113,26 @@ def printBanner():
 
 def similarImagesDividedInLists(images, minimumSimilarity):
     lists = []
-    imagesCopy = images.copy()
-    imagesAlreadyDivided = []
-    imageIndex = 0
+    wasAdded = False
 
-    while(len(imagesCopy) != 0):
-        actualImage = imagesCopy[imageIndex]
-        similarImages = similarImagesOfImage(actualImage,imagesCopy,minimumSimilarity)
+    for image in images:
 
-        for image in similarImages:
-            remove(image,imagesCopy)
+        listOfImagesIndex = 0
+        while(listOfImagesIndex < len(lists)):
+            if(lists[listOfImagesIndex][0].isSimilarWith(image,minimumSimilarity)):
+                lists[listOfImagesIndex].append(image)
+                wasAdded = True
+                break; 
+            
+            listOfImagesIndex+=1
 
-        lists.append(similarImages)
+        if not wasAdded:
+            lists.append([image])
+
+        wasAdded = False
+
 
     return lists
-
-def similarImagesOfImage(image, arrayOfImages, minimumSimilarity):
-    similarImages = []
-    for anImage in arrayOfImages:
-        if anImage.similarityWith(image) >= minimumSimilarity:
-            similarImages.append(anImage)
-    return similarImages
 
 def isValidSimilarityGrade(aSimilarityGrade):
     return 0 <= aSimilarityGrade <= 1
