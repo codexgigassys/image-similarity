@@ -39,7 +39,7 @@ jobs:
           version: 19.03.13
       - run: |
             docker build -t imagesimilarity .
-            docker run --name imagesimilarity -d imagesimilarity1
+            docker run --name imagesimilarity1 -d imagesimilarity
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
