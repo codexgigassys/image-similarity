@@ -1,6 +1,7 @@
 FROM python:3
 WORKDIR /myapp
-ADD tests /myapp
+RUN mkdir /myapp/tests
+ADD tests /myapp/tests
 COPY imageSimilarity.py /myapp
 COPY monkeymagic.py /myapp
 COPY requirements.txt /myapp
