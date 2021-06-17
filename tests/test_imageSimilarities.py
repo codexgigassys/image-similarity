@@ -32,37 +32,6 @@ def test_twoSimilarImagesHasHighSimilarity():
 
     assert result > 0.9
 
-def test_imageHasItselfAsSimilarImage():
-    image = Image.fromPath('testImages/16.jpeg')
-    similarImages = imageSimilarity.similarImagesOfImage(image,testImages,0.95)
-
-    assert imageSimilarity.isImageInsideImages(image,similarImages)
-
-def test_imageHasSomeSimilarImages():
-    image = Image.fromPath('testImages/08.jpeg')
-    similarImages = imageSimilarity.similarImagesOfImage(image,testImages,0.95)
-    quantityOfSimilarImages = len(similarImages)
-
-    assert quantityOfSimilarImages == 14
-
-def test_imageHasOnlyOneImageWithSimilarityOne():
-    image = Image.fromPath('testImages/18.jpeg')
-    similarImages = imageSimilarity.similarImagesOfImage(image,testImages, 1)
-    quantityOfSimilarImages = len(similarImages)
-
-    assert quantityOfSimilarImages == 1
-
-def test_imageTwoDifferentSimilarImagesHasTheSameSimilarImages():
-    imageOne = Image.fromPath('testImages/02.jpeg')
-    imageTwo = Image.fromPath('testImages/14.jpeg')
-
-    similarImagesOfImageOne = imageSimilarity.similarImagesOfImage(imageOne,testImages,0.95)
-    similarImagesOfImageTwo = imageSimilarity.similarImagesOfImage(imageTwo,testImages,0.95)
-    quantityOfSimilarImagesOfImageOne = len(similarImagesOfImageOne)
-    quantityOfSimilarImagesOfImageTwo = len(similarImagesOfImageTwo)
-
-    assert quantityOfSimilarImagesOfImageOne == quantityOfSimilarImagesOfImageTwo
-
 def test_fiveBatchsFromTestImagesWithHighSimilarity():
     batchs = imageSimilarity.similarImagesDividedInLists(testImages,0.95)
     quantityOfBatchs = len(batchs)
