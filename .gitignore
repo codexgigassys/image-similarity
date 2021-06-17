@@ -8,3 +8,4 @@ Ignore backup files and compiled python
 __pycache__
 output/*
 tests/testResult/*
+.circleci
