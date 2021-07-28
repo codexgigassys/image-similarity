@@ -44,3 +44,6 @@ jobs:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
           command: docker exec -i imagesimilarity1 bash -c "cd /image-similarity/tests && python -m pytest ."
+      - store_artifacts:
+          path: ./imageSimilarity.log
+          destination: imageSimilarity.log
