@@ -1,8 +1,8 @@
 version: "2.4"
 services:
-  web:
+  server_debug:
     build: .
     ports:
       - "9082:9081"
-    volume:
+    volumes:
       - ".:/image-similarity/"

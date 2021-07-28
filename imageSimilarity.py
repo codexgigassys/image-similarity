@@ -12,10 +12,22 @@ from pyfiglet import Figlet
 import hashlib
 import numpy as np
 import cv2
+import logging
+import sys
+import traceback
 
 defaultImagesPath = 'images'
 defaultOutputPath = 'output'
 defaultSimilarityGrade = 0.95
+
+def log_exceptions(type, value, tb):
+    for line in traceback.TracebackException(type, value, tb).format(chain=True):
+        logging.exception(line)
+    logging.exception(value)
+
+    sys.__excepthook__(type, value, tb) # calls default excepthook
+
+sys.excepthook = log_exceptions
 
 class Image:
     @classmethod
@@ -24,7 +36,9 @@ class Image:
 
     @classmethod
     def allFromPath(cls,path):
+        logging.debug("Reading all images from " + path)
         arrayOfImagesNames = os.listdir(path)
+        logging.debug("Files detected: " + str(len(arrayOfImagesNames)))
         arrayOfImages = []
 
         for imageName in arrayOfImagesNames:
@@ -32,6 +46,7 @@ class Image:
             arrayOfImages.append(currentImage)
         
         path == arrayOfImages
+        logging.debug("All images read")
         return arrayOfImages
 
     @classmethod
@@ -63,7 +78,8 @@ class Image:
     def similarityWith(self,anImage):
         selfImageProccessed = cv2.cvtColor(self.imageAsNumpyArray, cv2.COLOR_BGR2GRAY)
         anImageProccessed = cv2.cvtColor(anImage.imageAsNumpyArray, cv2.COLOR_BGR2GRAY)
-        return ssim(selfImageProccessed,anImageProccessed)
+        similarity = ssim(selfImageProccessed,anImageProccessed)
+        return similarity
 
     def isSimilarWith(self,anImage,minimumSimilarity):
         return self.similarityWith(anImage) >= minimumSimilarity
@@ -94,6 +110,7 @@ def hashBuffer(aBuffer):
     return  hasher.hexdigest()
 
 def saveImagesInLists(listsOfImages, path):
+    logging.debug("Saving divisions in {}".format(path))
     try:
         os.mkdir(path)
     except FileExistsError as error:
@@ -114,6 +131,9 @@ def printBanner():
 def similarImagesDividedInLists(images, minimumSimilarity):
     lists = []
     wasAdded = False
+    logging.debug("Dividing images according to their similarity")
+    logging.debug("Number of images to divide: {}".format(len(images)))
+    logging.debug("Minimum Similarity: {}".format(len(images)))
 
     for image in images:
 
@@ -131,6 +151,7 @@ def similarImagesDividedInLists(images, minimumSimilarity):
 
         wasAdded = False
 
+    logging.debug("Number of divisions: {}".format(len(lists)))
 
     return lists
 
@@ -151,42 +172,47 @@ def validateSimilarityGrade(directoryPath):
         exit()
 
 def processArguments():
+    processedOptions = {}
     parser = argparse.ArgumentParser()
     parser.add_argument('--similarityGrade', '-s', type=float, help="Value between 0 and 1. Default: 0.95")
     parser.add_argument('--imagesDirectory', '-i', help="Path where images are found. Default: 'images' ")
     parser.add_argument('--outputDirectory', '-o', help="Path where processed images are. Default: 'output'")
     parser.add_argument('--runServer', '-r', help="Run server with API.", action='store_true')
+    parser.add_argument('--logging', '-l', help="Run server with API.", action='store_true')
     args = parser.parse_args()
-
-    runServerOption = args.runServer
 
     if(args.similarityGrade is not None):
         validateSimilarityGrade(args.similarityGrade)
-        similarityGrade = args.similarityGrade
+        processedOptions["similarityGrade"] = args.similarityGrade
     else:
-        similarityGrade = defaultSimilarityGrade
+        processedOptions["similarityGrade"] = defaultSimilarityGrade
 
     if(args.imagesDirectory is not None):
         validateDirectoryPath(args.imagesDirectory)
-        imagesPath = args.imagesDirectory
+        processedOptions["imagesPath"] = args.imagesDirectory
     else:
-        imagesPath = defaultImagesPath
+        processedOptions["imagesPath"] = defaultImagesPath
 
     if(args.outputDirectory is not None):
-        outputDirectory = args.outputDirectory
+        processedOptions["outputDirectory"] = args.outputDirectory
     else:
-        outputDirectory = defaultOutputPath
+        processedOptions["outputDirectory"] = defaultOutputPath
 
-    return (similarityGrade,imagesPath,outputDirectory,runServerOption)
+    processedOptions["logging"] = args.logging
+    processedOptions["runServer"] = args.runServer
+
+    return processedOptions
 
 def filesBuffersFromRequest(request):
-
+    logging.debug("Getting buffers from request...")
     filesAsFileUpload = list(request.files.values())
     files = []
 
     for fileUpload in filesAsFileUpload:
         files.append(fileUpload.file.read())
+        logging.debug("File Size: {} bytes".format(len(files[-1])))
 
+    logging.debug("All buffers obtained...")
     return files
 
 def buffersToImages(buffers):
@@ -215,6 +241,7 @@ def hashListOfImages(list):
 
 @post('/api/imageSimilarityByHash')
 def imageSimilarityByHash():
+    logging.debug("Processing Request..")
     if( 'similarity_grade' in request.params.keys() ):
         similarityGrade = float(request.params['similarity_grade'])
 
@@ -233,24 +260,29 @@ def imageSimilarityByHash():
     return {"lists":listsHashListResult}
 
 def runServer():
+    logging.debug("Running server...")
     run(host='0.0.0.0', port=9081, debug=False, server='gevent')
+    logging.debug("Server Working...")
 
 def main():
     
-    printBanner()
-    
-    (similarityGrade, imagesPath, outputPath,runServerOption) = processArguments()
+    printBanner()  
+    optionsProcessed = processArguments()
 
-    if runServerOption == True :
+    if not optionsProcessed["logging"]:
+        logging.disable()
+    else:
+        logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s][%(levelname)s] %(message)s', filename='imageSimilarity.log')
+
+    if optionsProcessed["runServer"]:
         runServer()
     else:
-        print("Loading images from '{}'...".format(imagesPath))
-        images = Image.allFromPath(imagesPath)
-        print("Dividing images in lists according to similarity ({})...".format(similarityGrade))
-        lists = similarImagesDividedInLists(images,similarityGrade)
-        print("Saving images in '{}'...".format(outputPath))
-        saveImagesInLists(lists,outputPath)
-    
+        print("Loading images from '{}'...".format(optionsProcessed["imagesPath"]))
+        images = Image.allFromPath(optionsProcessed["imagesPath"])
+        print("Dividing images in lists according to similarity ({})...".format(optionsProcessed["similarityGrade"]))
+        lists = similarImagesDividedInLists(images,optionsProcessed["similarityGrade"])
+        print("Saving images in '{}'...".format(optionsProcessed["outputDirectory"]))
+        saveImagesInLists(lists,optionsProcessed["outputDirectory"])
     print("Done.")
 
 if __name__ == "__main__":

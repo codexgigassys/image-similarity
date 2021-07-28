@@ -4,6 +4,7 @@ Ignore backup files and compiled python
 *.wpr
 *.wpu
 *.swp
+*.log
 
 __pycache__
 output/*
