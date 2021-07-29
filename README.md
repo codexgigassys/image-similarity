@@ -23,6 +23,14 @@
         Dividing images in batches according to similarity (0.95)...
         Saving images in 'output'...
         Done.
+
+ 1. [Contents](#getting-started)
+ 2. [Prerequisites](#prerequisites)
+ 3. [Running](#running)
+ 4. [Run with docker](#run-with-docker)
+ 5. [APIs](#apis)
+ 6. [Get Help](#get-help)
+
 # Getting Started
 To get the repository, run:
 
@@ -42,8 +50,16 @@ Remember that similarity grade goes between 0 and 1. By default, this value is 0
 
 A complete script running is:
 
-    python .\imageSimilarity.py --similarityGrade aValidValue --imagesDirectory pathToImages --outputDirectory pathToSaveOutput 
+    python .\imageSimilarity.py --similarityGrade aValidValue --imagesDirectory pathToImages --
+    outputDirectory pathToSaveOutput 
 
+If you wish to log imageSimilarity activities, add `--logging` or just `-l`. All logging related information may be in *imageSimilarity.log*.
+
+# Run with Docker
+All you have to do is
+
+    docker-compose up
+API of below will be working
 # APIs
 The script can create a server to hold an API that receives images and then returns a list of lists with similar images hashes. A use case could be (it's exampleCode.py):
 
