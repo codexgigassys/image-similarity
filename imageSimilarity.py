@@ -12,6 +12,7 @@ from pyfiglet import Figlet
 import hashlib
 import numpy as np
 import cv2
+import bottle
 
 defaultImagesPath = 'images'
 defaultOutputPath = 'output'
