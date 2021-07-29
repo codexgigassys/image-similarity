@@ -17,6 +17,8 @@ defaultImagesPath = 'images'
 defaultOutputPath = 'output'
 defaultSimilarityGrade = 0.95
 
+bottle.BaseRequest.MEMFILE_MAX = 1024 * 1024
+
 class Image:
     @classmethod
     def fromPath(cls,path):
