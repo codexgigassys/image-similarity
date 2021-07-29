@@ -15,6 +15,7 @@ import cv2
 import logging
 import sys
 import traceback
+import bottle
 
 defaultImagesPath = 'images'
 defaultOutputPath = 'output'
@@ -28,6 +29,7 @@ def log_exceptions(type, value, tb):
     sys.__excepthook__(type, value, tb) # calls default excepthook
 
 sys.excepthook = log_exceptions
+bottle.BaseRequest.MEMFILE_MAX = 1024 * 1024
 
 class Image:
     @classmethod
