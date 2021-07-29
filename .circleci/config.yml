@@ -43,7 +43,7 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: docker exec -i imagesimilarity1 bash -c "cd /image-similarity/tests && python -m pytest ."
+          command: docker exec -i imagesimilarity1 bash -c "cd /image-similarity/tests && python -m pytest . -vvvv"
       - run: docker-compose exec syslog timeout -t 600 tail -n 10000 /var/log/messages || echo timeout
       - store_artifacts:
           path: /tmp/imageSimilarity.log
