@@ -1,5 +1,3 @@
-[![Image Similarity](https://circleci.com/gh/codexgigassys/image-similarity.svg?style=svg)](https://circleci.com/gh/codexgigassys/image-similarity)
-
 # imageSimilarity
 `imageSimilarity` is a tool that divides a group of images according to their similarity grade between them which goes between 0 and 1. 0 means not similar and 1 means that those images are equal. It uses the SSIM method. Just a interesting fact, the relation of similarity is considered to be **transitive**, **symmetric**, and **reflexive**. It's a key concept utilized when images dividing comes.
 
