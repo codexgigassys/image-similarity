@@ -47,7 +47,7 @@ jobs:
       - run:
           name: Verify pep8
           # This assumes pytest is installed via the install-package step above
-          command: docker exec -i imagesimilarity1 bash -c "python -m pytest . -q --pep8 -v"
+          command: docker exec -i imagesimilarity1 bash -c "python -m pytest . -q --pep8 -v -W ignore::pytest.PytestDeprecationWarning"
       - store_artifacts:
           path: /tmp/imageSimilarity.log
           destination: imageSimilarity.log
