@@ -1,25 +1,53 @@
 import sys
-#The following line is done to get the imageSimilarity.py that is in the previous folder.
-sys.path.append('../')
+import cv2
 import imageSimilarity
+from imageSimilarity import Image
 
-def test_aSimilarityGradeBelowZeroIsNotValid():
-    assert not imageSimilarity.isValidSimilarityGrade(-0.4)
+sys.path.append('../')
+testImages = Image.allFromPath('/image-similarity/tests/testImages/')
 
-def test_aSimilarityGradeEqualToZeroIsValid():
-    assert imageSimilarity.isValidSimilarityGrade(0)
 
-def test_aSimilarityGradeEqualToOneIsValid():
-    assert imageSimilarity.isValidSimilarityGrade(1)
+def test_twoEqualImagesHasSimilarityOne():
 
-def test_aSimilarityGradeGreaterThanZeroAndBelowOneIsValid():
-    assert imageSimilarity.isValidSimilarityGrade(0.5)
+    imageOne = Image.fromPath('tests/testImages/01.jpeg')
+    imageTwo = Image.fromPath('tests/testImages/01.jpeg')
 
-def test_aSimilarityGradeGreaterThanOneIsNotValid():
-    assert not imageSimilarity.isValidSimilarityGrade(1.6)
+    result = imageOne.similarityWith(imageTwo)
 
-def test_aStringIsNotAValidDirectoryPath():
-    assert not imageSimilarity.isValidDirectoryPath("xxxXXXxxx-*/-.,")
+    assert result == 1
 
-def test_aStringisAValidDirectoryPath():
-    assert imageSimilarity.isValidDirectoryPath(".")
+
+def test_twoNotSimilarImagesHasLowSimilarity():
+    imageOne = Image.fromPath('tests/testImages/01.jpeg')
+    imageTwo = Image.fromPath('tests/testImages/03.jpeg')
+
+    result = imageOne.similarityWith(imageTwo)
+
+    assert result < 0.25
+
+
+def test_twoSimilarImagesHasHighSimilarity():
+    imageOne = Image.fromPath('tests/testImages/01.jpeg')
+    imageTwo = Image.fromPath('tests/testImages/02.jpeg')
+
+    result = imageOne.similarityWith(imageTwo)
+
+    assert result > 0.9
+
+
+def test_fiveBatchsFromTestImagesWithHighSimilarity():
+    batchs = imageSimilarity.similarImagesDividedInLists(testImages, 0.95)
+    quantityOfBatchs = len(batchs)
+    assert quantityOfBatchs == 5
+
+
+def test_twentyOneBatchsFromTestImagesWithSimilarityOne():
+    batchs = imageSimilarity.similarImagesDividedInLists(testImages, 1)
+    quantityOfBatchs = len(batchs)
+    assert quantityOfBatchs == 21
+
+
+def test_twentyOneBatchsFromTestImagesWithSimilarityOne():
+    batchs = imageSimilarity.similarImagesDividedInLists(testImages, 0)
+    quantityOfBatchs = len(batchs)
+    assert quantityOfBatchs == 1

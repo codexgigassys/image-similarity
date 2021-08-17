@@ -1,7 +1,6 @@
-#!
 import monkeymagic
 import gevent
-from bottle import run,post,request
+from bottle import run, post, request
 from sys import path
 from skimage.metrics import structural_similarity as ssim
 import cv2
@@ -17,73 +16,76 @@ import sys
 import traceback
 import bottle
 
+
 defaultImagesPath = 'images'
 defaultOutputPath = 'output'
 defaultSimilarityGrade = 0.95
+
 
 def log_exceptions(type, value, tb):
     for line in traceback.TracebackException(type, value, tb).format(chain=True):
         logging.exception(line)
     logging.exception(value)
 
-    sys.__excepthook__(type, value, tb) # calls default excepthook
+    sys.__excepthook__(type, value, tb)
 
 sys.excepthook = log_exceptions
 bottle.BaseRequest.MEMFILE_MAX = 1024 * 1024
 
+
 class Image:
     @classmethod
-    def fromPath(cls,path):
-        return cls(path,None)
+    def fromPath(cls, path):
+        return cls(path, None)
 
     @classmethod
-    def allFromPath(cls,path):
+    def allFromPath(cls, path):
         logging.debug("Reading all images from " + path)
         arrayOfImagesNames = os.listdir(path)
         logging.debug("Files detected: " + str(len(arrayOfImagesNames)))
         arrayOfImages = []
 
         for imageName in arrayOfImagesNames:
-            currentImage = cls.fromPath(path+'/'+imageName)
+            currentImage = cls.fromPath(path + '/' + imageName)
             arrayOfImages.append(currentImage)
-        
+
         path == arrayOfImages
         logging.debug("All images read")
         return arrayOfImages
 
     @classmethod
-    def fromBuffer(cls,buffer):
-        return cls(None,buffer)
+    def fromBuffer(cls, buffer):
+        return cls(None, buffer)
 
     @classmethod
-    def allFromBuffers(cls,buffers):
+    def allFromBuffers(cls, buffers):
         arrayOfImages = []
 
         for buffer in buffers:
             arrayOfImages.append(Image.fromBuffer(buffer))
 
-        return arrayOfImages    
+        return arrayOfImages
 
-    def __init__(self,path=None,buffer=None):
-        if path != None:
+    def __init__(self, path=None, buffer=None):
+        if path is not None:
             self.imageAsNumpyArray = cv2.imread(path)
             self.name = path.split("/")[-1]
-            file = open(path,'rb')
+            file = open(path, 'rb')
             self.buffer = file.read()
             file.close()
-        elif buffer != None:
+        elif buffer is not None:
             file_bytes = np.asarray(bytearray(buffer), dtype=np.uint8)
             self.imageAsNumpyArray = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
             self.name = ""
             self.buffer = buffer
 
-    def similarityWith(self,anImage):
+    def similarityWith(self, anImage):
         selfImageProccessed = cv2.cvtColor(self.imageAsNumpyArray, cv2.COLOR_BGR2GRAY)
         anImageProccessed = cv2.cvtColor(anImage.imageAsNumpyArray, cv2.COLOR_BGR2GRAY)
-        similarity = ssim(selfImageProccessed,anImageProccessed)
+        similarity = ssim(selfImageProccessed, anImageProccessed)
         return similarity
 
-    def isSimilarWith(self,anImage,minimumSimilarity):
+    def isSimilarWith(self, anImage, minimumSimilarity):
         return self.similarityWith(anImage) >= minimumSimilarity
 
     def hash(self):
@@ -92,7 +94,8 @@ class Image:
     def sha1(self):
         hasher = hashlib.sha1()
         hasher.update(self.buffer)
-        return  hasher.hexdigest()
+        return hasher.hexdigest()
+
 
 def remove(array, arrays):
 
@@ -103,13 +106,16 @@ def remove(array, arrays):
     else:
         arrays.pop(index)
 
-def isImageInsideImages(image,imagesArray):
+
+def isImageInsideImages(image, imagesArray):
     return image.hash() in [a.hash() for a in imagesArray]
+
 
 def hashBuffer(aBuffer):
     hasher = hashlib.sha1()
     hasher.update(aBuffer)
-    return  hasher.hexdigest()
+    return hasher.hexdigest()
+
 
 def saveImagesInLists(listsOfImages, path):
     logging.debug("Saving divisions in {}".format(path))
@@ -118,17 +124,19 @@ def saveImagesInLists(listsOfImages, path):
     except FileExistsError as error:
         shutil.rmtree(path)
         os.mkdir(path)
-    
-    for numberOfList in range(0,len(listsOfImages)):
-        os.mkdir(path+'/'+str(numberOfList))
-        for numberOfImage in range(0,len(listsOfImages[numberOfList])):
+
+    for numberOfList in range(0, len(listsOfImages)):
+        os.mkdir(path + '/' + str(numberOfList))
+        for numberOfImage in range(0, len(listsOfImages[numberOfList])):
             image = listsOfImages[numberOfList][numberOfImage]
-            cv2.imwrite(path+'/'+str(numberOfList)+'/'+image.name,image.imageAsNumpyArray)
+            cv2.imwrite(path + '/' + str(numberOfList) + '/' + image.name, image.imageAsNumpyArray)
+
 
 def printBanner():
     customFiglet = Figlet(font='doom')
     asciiBanner = customFiglet.renderText('Image Similarity')
     print(asciiBanner)
+
 
 def similarImagesDividedInLists(images, minimumSimilarity):
     lists = []
@@ -141,12 +149,12 @@ def similarImagesDividedInLists(images, minimumSimilarity):
 
         listOfImagesIndex = 0
         while(listOfImagesIndex < len(lists)):
-            if(lists[listOfImagesIndex][0].isSimilarWith(image,minimumSimilarity)):
+            if(lists[listOfImagesIndex][0].isSimilarWith(image, minimumSimilarity)):
                 lists[listOfImagesIndex].append(image)
                 wasAdded = True
-                break; 
-            
-            listOfImagesIndex+=1
+                break
+
+            listOfImagesIndex += 1
 
         if not wasAdded:
             lists.append([image])
@@ -157,21 +165,26 @@ def similarImagesDividedInLists(images, minimumSimilarity):
 
     return lists
 
+
 def isValidSimilarityGrade(aSimilarityGrade):
     return 0 <= aSimilarityGrade <= 1
 
+
 def isValidDirectoryPath(pathString):
     return os.path.isdir(pathString)
+
 
 def validateDirectoryPath(aSimilarityGrade):
     if not isValidDirectoryPath(aSimilarityGrade):
         print("ERROR: Paths given should exist")
         exit()
 
+
 def validateSimilarityGrade(directoryPath):
     if not isValidSimilarityGrade(directoryPath):
         print("ERROR: Similarity grade should be between 0 and 1.")
         exit()
+
 
 def processArguments():
     processedOptions = {}
@@ -205,6 +218,7 @@ def processArguments():
 
     return processedOptions
 
+
 def filesBuffersFromRequest(request):
     logging.debug("Getting buffers from request...")
     filesAsFileUpload = list(request.files.values())
@@ -217,6 +231,7 @@ def filesBuffersFromRequest(request):
     logging.debug("All buffers obtained...")
     return files
 
+
 def buffersToImages(buffers):
     images = []
 
@@ -224,6 +239,7 @@ def buffersToImages(buffers):
         images.append(Image.fromBuffer(buffer))
 
     return images
+
 
 def hashListsOfImages(lists):
     hashList = []
@@ -233,6 +249,7 @@ def hashListsOfImages(lists):
 
     return hashList
 
+
 def hashListOfImages(list):
     hashList = []
 
@@ -241,34 +258,37 @@ def hashListOfImages(list):
 
     return hashList
 
+
 @post('/api/imageSimilarityByHash')
 def imageSimilarityByHash():
     logging.debug("Processing Request..")
-    if( 'similarity_grade' in request.params.keys() ):
+    if('similarity_grade' in request.params.keys()):
         similarityGrade = float(request.params['similarity_grade'])
 
         if not isValidSimilarityGrade(similarityGrade):
             return "ERROR: Similarity grade should be between 0 and 1."
-    
+
     else:
         similarityGrade = 0.95
 
     similarityGrade = 0.95
     imagesBuffers = filesBuffersFromRequest(request)
     images = Image.allFromBuffers(imagesBuffers)
-    lists = similarImagesDividedInLists(images,float(similarityGrade))
+    lists = similarImagesDividedInLists(images, float(similarityGrade))
     listsHashListResult = hashListsOfImages(lists)
 
-    return {"lists":listsHashListResult}
+    return {"lists": listsHashListResult}
+
 
 def runServer():
     logging.debug("Running server...")
     run(host='0.0.0.0', port=9081, debug=False, server='gevent')
     logging.debug("Server Working...")
 
+
 def main():
-    
-    printBanner()  
+
+    printBanner()
     optionsProcessed = processArguments()
 
     if not optionsProcessed["logging"]:
@@ -282,9 +302,9 @@ def main():
         print("Loading images from '{}'...".format(optionsProcessed["imagesPath"]))
         images = Image.allFromPath(optionsProcessed["imagesPath"])
         print("Dividing images in lists according to similarity ({})...".format(optionsProcessed["similarityGrade"]))
-        lists = similarImagesDividedInLists(images,optionsProcessed["similarityGrade"])
+        lists = similarImagesDividedInLists(images, optionsProcessed["similarityGrade"])
         print("Saving images in '{}'...".format(optionsProcessed["outputDirectory"]))
-        saveImagesInLists(lists,optionsProcessed["outputDirectory"])
+        saveImagesInLists(lists, optionsProcessed["outputDirectory"])
     print("Done.")
 
 if __name__ == "__main__":
