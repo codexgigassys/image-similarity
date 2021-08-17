@@ -1,6 +1,7 @@
 version: "2.4"
+
 services:
   server:
-    build: .
+    build: "imageSimilarityDockerfile"
     ports:
       - "9082:9081"
