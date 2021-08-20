@@ -46,4 +46,5 @@ jobs:
           command: docker exec -i imagesimilarity1 bash -c "pytest -q --pep8 -vvvv"
       - store_artifacts:
           name: Saving imageSimilarity.log as artifact
-          path: /image-similarity/imageSimilarity.log
+          path: /image-similarity
+          destinatoin: imageSimilarity.log
