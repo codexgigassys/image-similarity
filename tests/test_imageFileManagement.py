@@ -2,6 +2,7 @@ import sys
 import os
 import imageSimilarity
 from imageSimilarity import Image
+import testing_configuration
 
 sys.path.append('../')
 sys.path.append('tests')
