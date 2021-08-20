@@ -28,8 +28,9 @@
  2. [Prerequisites](#prerequisites)
  3. [Running](#running)
  4. [Run with docker](#run-with-docker)
- 5. [APIs](#apis)
- 6. [Get Help](#get-help)
+ 5. [Development and Debug](#development-and-debug)
+ 6. [APIs](#apis)
+ 7. [Get Help](#get-help)
 
 # Getting Started
 To get the repository, run:
@@ -42,7 +43,7 @@ To install all Python (3.9 <= ) required modules, please run:
      pip install -r requirements.txt
    
 # Running
-First, you need a directory with images. You can save them inside `images `directory or you can create your own folder outside the script main folder. In case you do the later option, when you run the script, you pass the argument `--imagesDirectory pathToImages` (it works with relative and absolute paths).
+First, you need a directory with images. You can save them inside `images` directory or you can create your own folder outside the script main folder. In case you do the later option, when you run the script, you pass the argument `--imagesDirectory pathToImages` (it works with relative and absolute paths).
 
 Once the script is done, you have the result inside `output` directory or you can create your own folder passing the argument `--outputDirectory pathToSaveOutput`. If the folder doesn't exist, the script will create it.
 
@@ -59,7 +60,13 @@ If you wish to log imageSimilarity activities, add `--logging` or just `-l`. All
 All you have to do is
 
     docker-compose up
+
 API of below will be working
+
+# Development and Debug
+    
+In case you want to debug or make a contribution to Image Similarity, you can run `docker-compose -f build-n-debug-yml up -d`. This command will mount an image-similarity volume in your computer, allowing you to develop or debug with simplicity.
+
 # APIs
 The script can create a server to hold an API that receives images and then returns a list of lists with similar images hashes. A use case could be (it's exampleCode.py):
 
