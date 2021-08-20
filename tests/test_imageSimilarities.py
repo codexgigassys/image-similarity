@@ -2,11 +2,10 @@ import sys
 import cv2
 import imageSimilarity
 from imageSimilarity import Image
-import testing_configuration
-
 sys.path.append('../')
 testImages = Image.allFromPath('/image-similarity/tests/testImages/')
-
+sys.path.append('tests')
+import testing_configuration
 
 def test_twoEqualImagesHasSimilarityOne():
 
