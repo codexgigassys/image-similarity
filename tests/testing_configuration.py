@@ -1,4 +1,4 @@
 import logging
 
 
-logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s][%(levelname)s] %(message)s', filename='imageSimilarity.log')
+logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s][%(levelname)s] %(message)s', filename='/image-similarity/imageSimilarity.log')
