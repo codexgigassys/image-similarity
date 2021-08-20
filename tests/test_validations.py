@@ -7,6 +7,7 @@ testImages = Image.allFromPath('/image-similarity/tests/testImages/')
 sys.path.append('tests')
 import testing_configuration
 
+
 def test_twoEqualImagesHasSimilarityOne():
 
     imageOne = Image.fromPath('tests/testImages/01.jpeg')
