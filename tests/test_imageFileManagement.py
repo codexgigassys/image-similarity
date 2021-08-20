@@ -2,9 +2,9 @@ import sys
 import os
 import imageSimilarity
 from imageSimilarity import Image
-
 sys.path.append('../')
 sys.path.append('tests')
+import testing_configuration
 
 
 def test_batchOfFilesIsSavedInSpecifiedPath():
