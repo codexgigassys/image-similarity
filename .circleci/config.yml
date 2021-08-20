@@ -43,8 +43,8 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: docker exec -i imagesimilarity1 bash -c "pytest -q --pep8 -vvvv"
+          command: docker exec -i imagesimilarity1 bash -c "pytest -q --pep8 -vvvv" && docker exec -i imagesimilarity1 bash -c "cat imageSimilarity.log >> /tmp/imageSimilarity.log" 
       - store_artifacts:
           name: Saving imageSimilarity.log as artifact
-          path: /image-similarity
+          path: /tmp/imageSimilarity.log
           destinatoin: imageSimilarity.log
